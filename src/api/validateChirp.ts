@@ -1,4 +1,3 @@
-
 import type { Request, Response } from "express";
 
 export function handlerValidateChirp(req: Request, res: Response) {
@@ -14,5 +13,14 @@ export function handlerValidateChirp(req: Request, res: Response) {
     return;
   }
 
-  res.status(200).json({ valid: true });
+  const profaneWords = ["kerfuffle", "sharbert", "fornax"];
+
+  const cleanedBody = chirpBody
+    .split(" ")
+    .map((word) =>
+      profaneWords.includes(word.toLowerCase()) ? "****" : word,
+    )
+    .join(" ");
+
+  res.status(200).json({ cleanedBody });
 }

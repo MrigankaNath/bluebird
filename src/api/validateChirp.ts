@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 
-export function handlerValidateChirp(req: Request, res: Response) {
+export async function handlerValidateChirp(req: Request, res: Response) {
   const chirpBody = req.body.body;
 
   if (typeof chirpBody !== "string") {
@@ -9,8 +9,7 @@ export function handlerValidateChirp(req: Request, res: Response) {
   }
 
   if (chirpBody.length > 140) {
-    res.status(400).json({ error: "Chirp is too long" });
-    return;
+    throw new Error("Chirp is too long");
   }
 
   const profaneWords = ["kerfuffle", "sharbert", "fornax"];

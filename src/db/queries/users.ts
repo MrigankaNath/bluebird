@@ -11,3 +11,7 @@ export async function createUser(user: NewUser) {
 
   return result;
 }
+
+export async function deleteAllUsers() {
+  await db.delete(users);
+}

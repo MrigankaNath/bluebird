@@ -4,7 +4,7 @@ import { middlewareLogResponses } from "./middleware/logResponses.js";
 import { middlewareMetricsInc } from "./middleware/metricsInc.js";
 import { handlerMetrics } from "./api/metrics.js";
 import { handlerReset } from "./api/reset.js";
-import { handlerCreateChirp, handlerGetChirps } from "./api/chirps.js";
+import { handlerCreateChirp, handlerGetChirps, handlerGetChirp,} from "./api/chirps.js";
 import { middlewareErrorHandler } from "./middleware/errorHandler.js";
 import { config } from "./config.js";
 import postgres from "postgres";
@@ -31,6 +31,7 @@ app.use("/app", express.static("./src/app"));
 app.get("/api/healthz", handlerReadiness);
 app.post("/api/chirps", handlerCreateChirp);
 app.get("/api/chirps", handlerGetChirps);
+app.get("/api/chirps/:chirpId", handlerGetChirp);
 app.post("/api/users", handlerUsersCreate);
 
 app.get("/admin/metrics", handlerMetrics);

@@ -1,6 +1,7 @@
 import * as argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
+import { BadRequestError } from "./api/errors.js";
 
 type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;
 
@@ -40,4 +41,20 @@ export function validateJWT(tokenString: string, secret: string): string {
   }
 
   return decoded.sub!;
+}
+
+export function extractBearerToken(
+  authorization: string | undefined,
+): string {
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    throw new BadRequestError("Invalid authorization header");
+  }
+
+  const token = authorization.slice(7).trim();
+
+  if (!token) {
+    throw new BadRequestError("Token is required");
+  }
+
+  return token;
 }

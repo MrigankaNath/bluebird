@@ -1,10 +1,13 @@
 import type { Request, Response } from "express";
-import { BadRequestError } from "./errors.js";
+import { BadRequestError, UnauthorizedError } from "./errors.js";
 import { createChirp, getChirps, getChirp } from "../db/queries/chirps.js";
+import { getBearerToken, validateJWT } from "../auth.js";
+import { config } from "../config.js";
 
 export async function handlerCreateChirp(req: Request, res: Response) {
   const chirpBody = req.body.body;
-  const userId = req.body.userId;
+  const token = getBearerToken(req);
+  const userId = validateJWT(token, config.api.jwtSecret);
   if (typeof chirpBody !== "string") {
     throw new BadRequestError("Invalid chirp");
   }

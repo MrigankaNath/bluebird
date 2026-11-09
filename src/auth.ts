@@ -1,7 +1,8 @@
 import * as argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
-import { BadRequestError } from "./api/errors.js";
+import { BadRequestError,UnauthorizedError } from "./api/errors.js";
+import type { Request } from "express";
 
 type payload = Pick<JwtPayload, "iss" | "sub" | "iat" | "exp">;
 
@@ -34,13 +35,17 @@ export function makeJWT(
 }
 
 export function validateJWT(tokenString: string, secret: string): string {
-  const decoded = jwt.verify(tokenString, secret);
+  try {
+    const decoded = jwt.verify(tokenString, secret);
 
-  if (typeof decoded === "string") {
-    throw new Error("Invalid token payload");
+    if (typeof decoded === "string") {
+      throw new UnauthorizedError("Invalid token payload");
+    }
+
+    return decoded.sub!;
+  } catch {
+    throw new UnauthorizedError("Invalid or expired token");
   }
-
-  return decoded.sub!;
 }
 
 export function extractBearerToken(
@@ -57,4 +62,9 @@ export function extractBearerToken(
   }
 
   return token;
+}
+
+export function getBearerToken(req: Request): string {
+  const authorization = req.get("Authorization");
+  return extractBearerToken(authorization);
 }

@@ -1,9 +1,15 @@
+
 import type { Request, Response } from "express";
 import { createUser, getUserByEmail } from "../db/queries/users.js";
-import { hashPassword, checkPasswordHash, makeJWT } from "../auth.js";
+import { createRefreshToken } from "../db/queries/refreshTokens.js";
+import {
+  hashPassword,
+  checkPasswordHash,
+  makeJWT,
+  makeRefreshToken,
+} from "../auth.js";
 import { UnauthorizedError } from "./errors.js";
 import { config } from "../config.js";
-
 
 export async function handlerUsersCreate(req: Request, res: Response) {
   const email = req.body.email;
@@ -20,9 +26,6 @@ export async function handlerUsersLogin(req: Request, res: Response) {
   const email = req.body.email;
   const password = req.body.password;
 
-  const expiresInSeconds = req.body.expiresInSeconds ?? 3600;
-  const tokenExpiry = Math.min(expiresInSeconds, 3600);
-
   const user = await getUserByEmail(email);
   if (!user) {
     throw new UnauthorizedError("incorrect email or password");
@@ -35,11 +38,26 @@ export async function handlerUsersLogin(req: Request, res: Response) {
   if (!passwordMatches) {
     throw new UnauthorizedError("incorrect email or password");
   }
-  const token = makeJWT(user.id, tokenExpiry, config.api.jwtSecret);
+
+  // Access token expires in 1 hour
+  const token = makeJWT(user.id, 3600, config.api.jwtSecret);
+
+  // Refresh token expires in 60 days
+  const refreshToken = makeRefreshToken();
+  const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+
+  await createRefreshToken({
+    token: refreshToken,
+    userId: user.id,
+    expiresAt,
+    revokedAt: null,
+  });
+
   const { hashedPassword: _, ...userResponse } = user;
 
   res.status(200).json({
     ...userResponse,
     token,
+    refreshToken,
   });
 }

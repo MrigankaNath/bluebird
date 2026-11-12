@@ -1,12 +1,14 @@
 
 import type { Request, Response } from "express";
-import { createUser, getUserByEmail } from "../db/queries/users.js";
+import { createUser, getUserByEmail, updateUser } from "../db/queries/users.js";
 import { createRefreshToken } from "../db/queries/refreshTokens.js";
 import {
   hashPassword,
   checkPasswordHash,
   makeJWT,
   makeRefreshToken,
+  getBearerToken,
+  validateJWT,
 } from "../auth.js";
 import { UnauthorizedError } from "./errors.js";
 import { config } from "../config.js";
@@ -60,4 +62,30 @@ export async function handlerUsersLogin(req: Request, res: Response) {
     token,
     refreshToken,
   });
+}
+
+export async function handlerUsersUpdate(req: Request, res: Response) {
+  let token: string;
+
+  try {
+    token = getBearerToken(req);
+  } catch {
+    throw new UnauthorizedError("Invalid authorization header");
+  }
+  const userId = validateJWT(token, config.api.jwtSecret);
+
+  const email = req.body.email;
+  const password = req.body.password;
+
+  const hashedPassword = await hashPassword(password);
+
+  const user = await updateUser(userId, email, hashedPassword);
+
+  if (!user) {
+    throw new UnauthorizedError("User not found");
+  }
+
+  const { hashedPassword: _, ...userResponse } = user;
+
+  res.status(200).json(userResponse);
 }

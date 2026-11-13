@@ -65,13 +65,7 @@ export async function handlerUsersLogin(req: Request, res: Response) {
 }
 
 export async function handlerUsersUpdate(req: Request, res: Response) {
-  let token: string;
-
-  try {
-    token = getBearerToken(req);
-  } catch {
-    throw new UnauthorizedError("Invalid authorization header");
-  }
+  const token = getBearerToken(req);
   const userId = validateJWT(token, config.api.jwtSecret);
 
   const email = req.body.email;

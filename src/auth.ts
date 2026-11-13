@@ -1,7 +1,8 @@
+
 import * as argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";
-import { BadRequestError,UnauthorizedError } from "./api/errors.js";
+import { UnauthorizedError } from "./api/errors.js";
 import type { Request } from "express";
 import { randomBytes } from "node:crypto";
 
@@ -53,13 +54,13 @@ export function extractBearerToken(
   authorization: string | undefined,
 ): string {
   if (!authorization || !authorization.startsWith("Bearer ")) {
-    throw new BadRequestError("Invalid authorization header");
+    throw new UnauthorizedError("Invalid authorization header");
   }
 
   const token = authorization.slice(7).trim();
 
   if (!token) {
-    throw new BadRequestError("Token is required");
+    throw new UnauthorizedError("Token is required");
   }
 
   return token;
